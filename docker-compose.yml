@@ -1,0 +1,75 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: miwai_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-miwai}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-miwai_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-miwai_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-miwai} -d ${POSTGRES_DB:-miwai_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - miwai_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: miwai_backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-miwai}:${POSTGRES_PASSWORD:-miwai_secret}@db:5432/${POSTGRES_DB:-miwai_db}
+      JWT_SECRET: ${JWT_SECRET:-supersecretjwtkey2025}
+      PORT: 4000
+      NODE_ENV: development
+      FRONTEND_URL: http://localhost:3000
+    ports:
+      - "4000:4000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - miwai_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: miwai_frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://localhost:4000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - miwai_network
+
+  adminer:
+    image: adminer:latest
+    container_name: miwai_adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    networks:
+      - miwai_network
+
+volumes:
+  postgres_data:
+
+networks:
+  miwai_network:
+    driver: bridge

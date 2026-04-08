@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316"/>
+      <stop offset="100%" style="stop-color:#fb923c"/>
+    </linearGradient>
+    <linearGradient id="needleTop" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#2dd4bf"/>
+      <stop offset="100%" style="stop-color:#14b8a6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Fond rond orange -->
+  <circle cx="32" cy="32" r="30" fill="url(#bgGrad)"/>
+
+  <!-- Cercle cadran intérieur -->
+  <circle cx="32" cy="32" r="22" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+
+  <!-- Aiguille Nord (teal) -->
+  <polygon points="32,13 35,32 32,30 29,32" fill="url(#needleTop)"/>
+
+  <!-- Aiguille Sud (blanc) -->
+  <polygon points="32,51 35,32 32,34 29,32" fill="rgba(255,255,255,0.9)"/>
+
+  <!-- Centre pivot -->
+  <circle cx="32" cy="32" r="3" fill="white"/>
+  <circle cx="32" cy="32" r="1.5" fill="#f97316"/>
+
+  <!-- Points cardinaux -->
+  <text x="32" y="11" text-anchor="middle" font-family="sans-serif" font-size="5" font-weight="bold" fill="white" opacity="0.8">N</text>
+  <text x="32" y="57" text-anchor="middle" font-family="sans-serif" font-size="5" font-weight="bold" fill="white" opacity="0.6">S</text>
+  <text x="9" y="34" text-anchor="middle" font-family="sans-serif" font-size="5" font-weight="bold" fill="white" opacity="0.6">O</text>
+  <text x="56" y="34" text-anchor="middle" font-family="sans-serif" font-size="5" font-weight="bold" fill="white" opacity="0.6">E</text>
+</svg>

@@ -17,7 +17,7 @@ const Formation: React.FC = () => {
     setLoading(true);
     try {
       const res = await axios.get('/api/formations', { params: q ? { search: q } : {} });
-      setFormations(res.data);
+      setFormations(res.data.data);
     } catch (err) {
       console.error('Error fetching formations', err);
     } finally {

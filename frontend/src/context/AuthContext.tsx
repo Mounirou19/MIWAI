@@ -2,13 +2,16 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import axios from 'axios';
 import { User } from '../types';
 
+// Toutes les requêtes envoient automatiquement le cookie httpOnly
+axios.defaults.withCredentials = true;
+
 interface AuthContextType {
   user: User | null;
-  token: string | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, firstName?: string, lastName?: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   updateUser: (user: User) => void;
 }
 
@@ -16,56 +19,40 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Vérifie la session au démarrage via le cookie httpOnly
   useEffect(() => {
-    const storedToken = localStorage.getItem('miwai_token');
-    const storedUser = localStorage.getItem('miwai_user');
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-      axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
-    }
+    axios.get('/api/users/me')
+      .then(res => setUser(res.data))
+      .catch(() => setUser(null))
+      .finally(() => setIsLoading(false));
   }, []);
 
   const login = async (email: string, password: string) => {
     const response = await axios.post('/api/auth/login', { email, password });
-    const { token: newToken, user: newUser } = response.data;
-    setToken(newToken);
-    setUser(newUser);
-    localStorage.setItem('miwai_token', newToken);
-    localStorage.setItem('miwai_user', JSON.stringify(newUser));
-    axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+    setUser(response.data.user);
   };
 
   const register = async (email: string, password: string, firstName?: string, lastName?: string) => {
     const response = await axios.post('/api/auth/register', { email, password, firstName, lastName });
-    const { token: newToken, user: newUser } = response.data;
-    setToken(newToken);
-    setUser(newUser);
-    localStorage.setItem('miwai_token', newToken);
-    localStorage.setItem('miwai_user', JSON.stringify(newUser));
-    axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+    setUser(response.data.user);
   };
 
-  const logout = () => {
-    setToken(null);
+  const logout = async () => {
+    await axios.post('/api/auth/logout');
     setUser(null);
-    localStorage.removeItem('miwai_token');
-    localStorage.removeItem('miwai_user');
-    delete axios.defaults.headers.common['Authorization'];
   };
 
   const updateUser = (updatedUser: User) => {
     setUser(updatedUser);
-    localStorage.setItem('miwai_user', JSON.stringify(updatedUser));
   };
 
   return (
     <AuthContext.Provider value={{
       user,
-      token,
-      isAuthenticated: !!token,
+      isAuthenticated: !!user,
+      isLoading,
       login,
       register,
       logout,

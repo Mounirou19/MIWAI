@@ -12,12 +12,14 @@ import Forum from './pages/Forum';
 import ForumTopic from './pages/ForumTopic';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) return null;
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 };
 
 const AppRoutes: React.FC = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) return null;
 
   return (
     <Routes>

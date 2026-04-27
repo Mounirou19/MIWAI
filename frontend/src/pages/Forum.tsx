@@ -25,7 +25,7 @@ const Forum: React.FC = () => {
     setLoading(true);
     try {
       const res = await axios.get('/api/forum/topics', { params: q ? { search: q } : {} });
-      setTopics(res.data);
+      setTopics(res.data.data);
     } catch (err) {
       console.error('Error fetching topics', err);
     } finally {

@@ -17,7 +17,7 @@ const Poste: React.FC = () => {
     setLoading(true);
     try {
       const res = await axios.get('/api/postes', { params: q ? { search: q } : {} });
-      setPostes(res.data);
+      setPostes(res.data.data);
     } catch (err) {
       console.error('Error fetching postes', err);
     } finally {

@@ -9,8 +9,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-miwai}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-miwai_secret}
       POSTGRES_DB: ${POSTGRES_DB:-miwai_db}
-    ports:
-      - "5432:5432"
+    # Port non exposé à l'extérieur — accès interne uniquement via miwai_network
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -29,10 +28,10 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-miwai}:${POSTGRES_PASSWORD:-miwai_secret}@db:5432/${POSTGRES_DB:-miwai_db}
-      JWT_SECRET: ${JWT_SECRET:-supersecretjwtkey2025}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required, set it in your .env file}
       PORT: 4000
-      NODE_ENV: development
-      FRONTEND_URL: http://localhost:3000
+      NODE_ENV: ${NODE_ENV:-production}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
     ports:
       - "4000:4000"
     depends_on:

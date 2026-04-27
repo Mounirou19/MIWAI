@@ -6,15 +6,16 @@ export interface AuthRequest extends Request {
 }
 
 export const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction): void => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  // Priorité au cookie httpOnly, fallback sur le header Authorization
+  const token = req.cookies?.miwai_token
+    || (req.headers['authorization']?.split(' ')[1]);
 
   if (!token) {
     res.status(401).json({ error: 'Access token required' });
     return;
   }
 
-  const jwtSecret = process.env.JWT_SECRET || 'supersecretjwtkey2025';
+  const jwtSecret = process.env.JWT_SECRET!;
 
   try {
     const decoded = jwt.verify(token, jwtSecret) as { userId: string };

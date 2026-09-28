@@ -1,8 +1,21 @@
-import { User, Poste, Formation, ForumTopic, ForumReply } from '../types';
+import { User, Poste, Formation, ForumTopic, ForumReply, Experience, Education } from '../types';
+import { totalMonths } from '../utils/duration';
 
 // Données de démonstration — reprises de backend/src/seed.ts
 
 type Author = ForumTopic['author'];
+
+const DEMO_EXPERIENCES: Experience[] = [
+  { id: 'exp-1', company: 'Capgemini Invent', location: 'Paris, France', title: 'Chef de Projet Digital', contractType: 'CDI', startDate: '2022-03', endDate: null },
+  { id: 'exp-2', company: 'Capgemini Invent', location: 'Paris, France', title: 'Consultante Transformation Digitale', contractType: 'CDI', startDate: '2020-01', endDate: '2022-02' },
+  { id: 'exp-3', company: 'Capgemini Invent', location: 'Paris, France', title: 'Stagiaire Consultante', contractType: 'Stage', startDate: '2019-07', endDate: '2019-12' },
+  { id: 'exp-4', company: 'Orange', location: 'Issy-les-Moulineaux, France', title: 'Chargée de projet web', contractType: 'Alternance', startDate: '2017-09', endDate: '2019-06' },
+];
+
+const DEMO_EDUCATIONS: Education[] = [
+  { id: 'edu-1', school: 'ESSEC Business School', degree: 'Master Management Stratégique', field: 'Stratégie', rank: 12, promoSize: 180 },
+  { id: 'edu-2', school: 'Université Paris Dauphine-PSL', degree: 'Licence Économie-Gestion', field: 'Économie-Gestion', rank: 25, promoSize: 320 },
+];
 
 export const DEMO_USER: User = {
   id: 'demo-user',
@@ -14,9 +27,15 @@ export const DEMO_USER: User = {
     userId: 'demo-user',
     currentJob: 'Chef de Projet Digital',
     currentSalary: 52000,
-    yearsExperience: 6,
+    yearsExperience: Math.floor(totalMonths(DEMO_EXPERIENCES) / 12),
     sector: 'Conseil',
-    formations: 'Master Management Stratégique — ESSEC Business School (2018)\nCertification Scrum Master PSM I (2021)',
+    formations: DEMO_EDUCATIONS.map((e) => `${e.degree} — ${e.school}`).join(', '),
+    phone: '06 12 34 56 78',
+    age: 29,
+    city: 'Paris',
+    country: 'France',
+    experiences: DEMO_EXPERIENCES,
+    educations: DEMO_EDUCATIONS,
   },
 };
 

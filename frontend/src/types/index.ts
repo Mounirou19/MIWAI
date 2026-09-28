@@ -14,6 +14,34 @@ export interface UserProfile {
   yearsExperience: number | null;
   sector: string | null;
   formations: string | null;
+  phone?: string | null;
+  age?: number | null;
+  city?: string | null;
+  country?: string | null;
+  experiences?: Experience[];
+  educations?: Education[];
+}
+
+export const CONTRACT_TYPES = ['CDI', 'CDD', 'Stage', 'Alternance', 'Freelance', 'Intérim', 'VIE', 'Autre'] as const;
+export type ContractType = typeof CONTRACT_TYPES[number];
+
+export interface Experience {
+  id: string;
+  company: string;
+  location: string;
+  title: string;
+  contractType: ContractType;
+  startDate: string; // YYYY-MM
+  endDate: string | null; // YYYY-MM, null = poste actuel
+}
+
+export interface Education {
+  id: string;
+  school: string;
+  degree: string;
+  field: string;
+  rank: number | null;
+  promoSize: number | null;
 }
 
 export interface Poste {

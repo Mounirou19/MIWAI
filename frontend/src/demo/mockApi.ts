@@ -80,6 +80,7 @@ const route = (method: string, path: string, params: Record<string, unknown>, bo
     const toInt = (v: unknown) => (v ? parseInt(String(v)) : null);
     user = {
       ...user,
+      email: body.email || user.email,
       firstName: body.firstName || user.firstName,
       lastName: body.lastName || user.lastName,
       profile: {
@@ -90,6 +91,12 @@ const route = (method: string, path: string, params: Record<string, unknown>, bo
         yearsExperience: toInt(body.yearsExperience),
         sector: body.sector || null,
         formations: body.formations || null,
+        phone: body.phone || null,
+        age: toInt(body.age),
+        city: body.city || null,
+        country: body.country || null,
+        experiences: Array.isArray(body.experiences) ? body.experiences : [],
+        educations: Array.isArray(body.educations) ? body.educations : [],
       },
     };
     return [200, user];

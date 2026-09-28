@@ -21,8 +21,7 @@ const Poste: React.FC = () => {
     } catch (err) {
       console.error('Error fetching postes', err);
     } finally {
-      // setLoading(false);
-      setPostes([]);
+      setLoading(false);
     }
   };
 

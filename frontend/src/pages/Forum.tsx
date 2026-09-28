@@ -29,8 +29,7 @@ const Forum: React.FC = () => {
     } catch (err) {
       console.error('Error fetching topics', err);
     } finally {
-      // setLoading(false);
-      setTopics([]);
+      setLoading(false);
     }
   };
 

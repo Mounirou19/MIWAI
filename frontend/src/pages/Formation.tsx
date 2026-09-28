@@ -21,8 +21,7 @@ const Formation: React.FC = () => {
     } catch (err) {
       console.error('Error fetching formations', err);
     } finally {
-      // setLoading(false);
-      setFormations([]);
+      setLoading(false);
     }
   };
 

@@ -119,3 +119,8 @@ export const COUNTRIES = [
   'Pays-Bas',
   'États-Unis',
 ];
+
+export const SECTORS = [
+  'Tech', 'Finance', 'Conseil', 'Santé', 'E-commerce', 'Retail',
+  'Industrie', 'Immobilier', 'Éducation', 'Médias', 'Telecom', 'Autre',
+];

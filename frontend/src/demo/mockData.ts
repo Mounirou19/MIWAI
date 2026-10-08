@@ -6,10 +6,10 @@ import { totalMonths } from '../utils/duration';
 type Author = ForumTopic['author'];
 
 const DEMO_EXPERIENCES: Experience[] = [
-  { id: 'exp-1', company: 'Capgemini Invent', location: 'Paris, France', title: 'Chef de Projet Digital', contractType: 'CDI', startDate: '2022-03', endDate: null },
-  { id: 'exp-2', company: 'Capgemini Invent', location: 'Paris, France', title: 'Consultante Transformation Digitale', contractType: 'CDI', startDate: '2020-01', endDate: '2022-02' },
-  { id: 'exp-3', company: 'Capgemini Invent', location: 'Paris, France', title: 'Stagiaire Consultante', contractType: 'Stage', startDate: '2019-07', endDate: '2019-12' },
-  { id: 'exp-4', company: 'Orange', location: 'Issy-les-Moulineaux, France', title: 'Chargée de projet web', contractType: 'Alternance', startDate: '2017-09', endDate: '2019-06' },
+  { id: 'exp-1', company: 'Capgemini Invent', location: 'Paris, France', title: 'Chef de Projet Digital', contractType: 'CDI', startDate: '2022-03', endDate: null, salary: 52000, sector: 'Conseil' },
+  { id: 'exp-2', company: 'Capgemini Invent', location: 'Paris, France', title: 'Consultante Transformation Digitale', contractType: 'CDI', startDate: '2020-01', endDate: '2022-02', salary: 41000, sector: 'Conseil' },
+  { id: 'exp-3', company: 'Capgemini Invent', location: 'Paris, France', title: 'Stagiaire Consultante', contractType: 'Stage', startDate: '2019-07', endDate: '2019-12', salary: 14400, sector: 'Conseil' },
+  { id: 'exp-4', company: 'Orange', location: 'Issy-les-Moulineaux, France', title: 'Chargée de projet web', contractType: 'Alternance', startDate: '2017-09', endDate: '2019-06', salary: 15600, sector: 'Telecom' },
 ];
 
 const DEMO_EDUCATIONS: Education[] = [
@@ -216,6 +216,7 @@ type SeedTopic = Omit<ForumTopic, '_count' | 'updatedAt' | 'authorId'> & { repli
 const seedTopics: SeedTopic[] = [
   {
     id: 'topic-reconversion-tech',
+    category: 'Reconversion',
     title: 'Reconversion vers la tech après 5 ans en finance - vos retours ?',
     body: `Bonjour à tous,
 
@@ -239,6 +240,7 @@ Pour la formation, je recommande plutôt un Master Data Science ou une certifica
   },
   {
     id: 'topic-master-dauphine',
+    category: 'Formation',
     title: 'Master 243 Dauphine : débouchés réels en 2025 ?',
     body: `Salut la communauté,
 
@@ -259,6 +261,7 @@ Paris 1 est meilleur si vous visez la recherche ou les marchés financiers purs.
   },
   {
     id: 'topic-chef-projet-vers-pm',
+    category: 'Poste',
     title: 'Passer de Chef de Projet Digital à Product Manager : retours ?',
     body: `Bonjour à tous,
 
@@ -279,6 +282,7 @@ Pour le salaire, avec 6 ans d'XP tu peux viser 58-65k€ en PM confirmé.`, days
   },
   {
     id: 'topic-salaire-consultant',
+    category: 'Rémunération',
     title: 'Salaire premier poste consultant - vos expériences',
     body: `Bonjour,
 
@@ -303,6 +307,7 @@ Attention : les heures en MBB sont très intenses.`, daysAgo(14)),
   },
   {
     id: 'topic-remote-work',
+    category: 'Secteur',
     title: 'Télétravail en 2025 : quels secteurs offrent le plus de flexibilité ?',
     body: `Avec la normalisation du télétravail post-COVID, j'essaie de comparer les secteurs.
 

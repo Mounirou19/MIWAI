@@ -121,6 +121,9 @@ const ForumTopic: React.FC = () => {
             </span>
           </div>
           <div className="flex-1">
+            <span className="inline-block text-xs font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full mb-2">
+              #{topic.category}
+            </span>
             <h1 className="text-2xl font-bold text-gray-900 mb-3">{topic.title}</h1>
             <div className="flex items-center gap-3 text-sm text-gray-400 mb-4">
               <span className="font-medium text-gray-600">{getAuthorName(topic.author)}</span>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { ForumTopic } from '../types';
+import { FORUM_CATEGORIES, ForumCategory, ForumTopic } from '../types';
 import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -10,21 +10,28 @@ const Forum: React.FC = () => {
   const [topics, setTopics] = useState<ForumTopic[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<ForumCategory | ''>('');
+  const [sort, setSort] = useState<'recent' | 'top'>('recent');
   const [activeTab, setActiveTab] = useState<'all' | 'mine' | 'drafts'>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newTitle, setNewTitle] = useState('');
+  const [newCategory, setNewCategory] = useState<ForumCategory | ''>('');
   const [newBody, setNewBody] = useState('');
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState('');
 
   useEffect(() => {
     fetchTopics();
-  }, []);
+  }, [appliedSearch, categoryFilter, sort]);
 
-  const fetchTopics = async (q?: string) => {
+  const fetchTopics = async () => {
     setLoading(true);
     try {
-      const res = await axios.get('/api/forum/topics', { params: q ? { search: q } : {} });
+      const params: Record<string, string> = { sort };
+      if (appliedSearch) params.search = appliedSearch;
+      if (categoryFilter) params.category = categoryFilter;
+      const res = await axios.get('/api/forum/topics', { params });
       setTopics(res.data.data);
     } catch (err) {
       console.error('Error fetching topics', err);
@@ -35,19 +42,30 @@ const Forum: React.FC = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchTopics(search);
+    setAppliedSearch(search.trim());
+  };
+
+  const closeCreateModal = () => {
+    setShowCreateModal(false);
+    setNewTitle('');
+    setNewCategory('');
+    setNewBody('');
+    setCreateError('');
   };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreateError('');
+    if (!newCategory) {
+      setCreateError('Veuillez choisir une catégorie');
+      return;
+    }
     setCreating(true);
     try {
-      const res = await axios.post('/api/forum/topics', { title: newTitle, body: newBody });
-      setTopics([res.data, ...topics]);
-      setShowCreateModal(false);
-      setNewTitle('');
-      setNewBody('');
+      await axios.post('/api/forum/topics', { title: newTitle, category: newCategory, body: newBody });
+      closeCreateModal();
+      // Recharge la liste pour respecter le filtre et le tri en cours
+      fetchTopics();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { error?: string } } };
       setCreateError(error.response?.data?.error || 'Erreur lors de la création');
@@ -142,13 +160,62 @@ const Forum: React.FC = () => {
         {search && (
           <button
             type="button"
-            onClick={() => { setSearch(''); fetchTopics(); }}
+            onClick={() => { setSearch(''); setAppliedSearch(''); }}
             className="px-4 py-2 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50"
           >
             Effacer
           </button>
         )}
       </form>
+
+      {/* Filtre par catégorie et tri */}
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        <div className="relative">
+          <select
+            aria-label="Filtrer par catégorie"
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value as ForumCategory | '')}
+            className={`appearance-none border rounded-xl pl-4 pr-9 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-400 ${
+              categoryFilter ? 'border-teal-300 bg-teal-50 text-teal-700' : 'border-gray-200 bg-white text-gray-600'
+            }`}
+          >
+            <option value="">Catégorie : toutes</option>
+            {FORUM_CATEGORIES.map((c) => (
+              <option key={c} value={c}>#{c}</option>
+            ))}
+          </select>
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">▼</span>
+        </div>
+
+        <div className="flex bg-white border border-gray-100 rounded-xl p-1 gap-1" role="group" aria-label="Trier les sujets">
+          {([
+            { key: 'top', label: '🔥 Top' },
+            { key: 'recent', label: '🕒 Récent' },
+          ] as const).map((opt) => (
+            <button
+              key={opt.key}
+              type="button"
+              aria-pressed={sort === opt.key}
+              onClick={() => setSort(opt.key)}
+              className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${
+                sort === opt.key ? 'bg-teal-400 text-white' : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        {categoryFilter && (
+          <button
+            type="button"
+            onClick={() => setCategoryFilter('')}
+            className="text-sm text-gray-500 hover:text-gray-800"
+          >
+            Retirer le filtre ✕
+          </button>
+        )}
+      </div>
 
       {/* Topic list */}
       {loading ? (
@@ -157,7 +224,11 @@ const Forum: React.FC = () => {
         <div className="card text-center py-12">
           <span className="text-4xl mb-3 block">💬</span>
           <p className="text-gray-600 font-medium">
-            {activeTab === 'mine' ? 'Vous n\'avez pas encore publié de sujet' : 'Aucun sujet trouvé'}
+            {activeTab === 'mine'
+              ? 'Vous n\'avez pas encore publié de sujet'
+              : categoryFilter
+              ? `Aucun sujet dans la catégorie #${categoryFilter}`
+              : 'Aucun sujet trouvé'}
           </p>
           <button
             onClick={() => setShowCreateModal(true)}
@@ -184,6 +255,9 @@ const Forum: React.FC = () => {
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
+                  <span className="inline-block text-xs font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full mb-1.5">
+                    #{topic.category}
+                  </span>
                   <h3 className="font-semibold text-gray-900 mb-1 hover:text-teal-600 transition-colors line-clamp-1">
                     {topic.title}
                   </h3>
@@ -235,6 +309,28 @@ const Forum: React.FC = () => {
                   />
                 </div>
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Catégorie</label>
+                  <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Catégorie">
+                    {FORUM_CATEGORIES.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        role="radio"
+                        aria-checked={newCategory === c}
+                        onClick={() => setNewCategory(c)}
+                        className={`text-sm px-3 py-1.5 rounded-full border transition-all ${
+                          newCategory === c
+                            ? 'bg-teal-400 border-teal-400 text-white font-semibold'
+                            : 'border-gray-200 text-gray-600 hover:border-teal-300 hover:text-teal-700'
+                        }`}
+                      >
+                        #{c}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1.5">Choisissez le thème principal de votre sujet</p>
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Corps du message</label>
                   <textarea
                     value={newBody}
@@ -249,7 +345,7 @@ const Forum: React.FC = () => {
               <div className="p-6 pt-0 flex gap-3 justify-end">
                 <button
                   type="button"
-                  onClick={() => { setShowCreateModal(false); setNewTitle(''); setNewBody(''); setCreateError(''); }}
+                  onClick={closeCreateModal}
                   className="px-5 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all"
                 >
                   Annuler

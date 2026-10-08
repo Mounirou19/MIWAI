@@ -33,6 +33,8 @@ export interface Experience {
   contractType: ContractType;
   startDate: string; // YYYY-MM
   endDate: string | null; // YYYY-MM, null = poste actuel
+  salary: number | null; // brut fixe annuel, en euros
+  sector: string | null;
 }
 
 export interface Education {
@@ -69,9 +71,16 @@ export interface Formation {
   skills: string[];
 }
 
+export const FORUM_CATEGORIES = [
+  'Rémunération', 'Poste', 'Orientation', 'Secteur', 'Spécialité',
+  'Formation', 'Reconversion', 'Entreprise', 'Vie pro',
+] as const;
+export type ForumCategory = typeof FORUM_CATEGORIES[number];
+
 export interface ForumTopic {
   id: string;
   title: string;
+  category: ForumCategory;
   body: string;
   authorId: string;
   views: number;

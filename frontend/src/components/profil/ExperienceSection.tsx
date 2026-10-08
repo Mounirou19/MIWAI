@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { CONTRACT_TYPES, ContractType, Experience } from '../../types';
 import { currentMonth, formatDuration, formatMonth, groupByCompany, monthsBetween } from '../../utils/duration';
 import { FieldError, inputClass, isFullMonth, Label, MonthYearSelect } from './fields';
+import { SECTORS } from '../../data/referentiels';
+
+export const formatSalary = (n: number) => `${n.toLocaleString('fr-FR')} €`;
 
 interface Draft {
   company: string;
@@ -11,9 +14,11 @@ interface Draft {
   startDate: string;
   endDate: string;
   isCurrent: boolean;
+  salary: string;
+  sector: string;
 }
 
-const emptyDraft: Draft = { company: '', location: '', title: '', contractType: '', startDate: '', endDate: '', isCurrent: false };
+const emptyDraft: Draft = { company: '', location: '', title: '', contractType: '', startDate: '', endDate: '', isCurrent: false, salary: '', sector: '' };
 
 const validate = (d: Draft) => {
   const errors: Partial<Record<keyof Draft, string>> = {};
@@ -29,6 +34,10 @@ const validate = (d: Draft) => {
     if (!isFullMonth(d.endDate)) errors.endDate = 'Mois et année de fin requis (ou cochez « poste actuel »)';
     else if (isFullMonth(d.startDate) && d.endDate < d.startDate) errors.endDate = 'La date de fin doit être après la date de début';
     else if (d.endDate > currentMonth()) errors.endDate = 'La date de fin ne peut pas être dans le futur';
+  }
+  if (d.salary) {
+    const n = Number(d.salary);
+    if (!Number.isInteger(n) || n < 0 || n > 1000000) errors.salary = 'Montant entier entre 0 et 1 000 000 €';
   }
   return errors;
 };
@@ -140,6 +149,37 @@ const ExperienceForm: React.FC<{
           </label>
           <FieldError message={errors.endDate} />
         </div>
+        <div>
+          <Label htmlFor="exp-salary">Rémunération</Label>
+          <div className="relative">
+            <input
+              id="exp-salary"
+              type="number"
+              inputMode="numeric"
+              min={0}
+              step={500}
+              value={draft.salary}
+              onChange={(e) => set('salary', e.target.value)}
+              placeholder="Ex : 45000"
+              className={`${inputClass(errors.salary)} pr-10`}
+            />
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-400">€</span>
+          </div>
+          <p className="text-xs text-gray-400 mt-1">Brut fixe annuel, en euros (hors variable et primes)</p>
+          <FieldError message={errors.salary} />
+        </div>
+        <div>
+          <Label htmlFor="exp-sector">Secteur</Label>
+          <select
+            id="exp-sector"
+            value={draft.sector}
+            onChange={(e) => set('sector', e.target.value)}
+            className="input-field"
+          >
+            <option value="">Sélectionner un secteur</option>
+            {SECTORS.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
       </div>
       <div className="flex gap-2 justify-end">
         <button type="button" onClick={onCancel} className="text-sm text-gray-600 px-4 py-2 rounded-full hover:bg-gray-100">
@@ -161,6 +201,8 @@ const toDraft = (e: Experience): Draft => ({
   startDate: e.startDate,
   endDate: e.endDate || '',
   isCurrent: e.endDate === null,
+  salary: e.salary?.toString() || '',
+  sector: e.sector || '',
 });
 
 const fromDraft = (d: Draft, id: string): Experience => ({
@@ -171,6 +213,8 @@ const fromDraft = (d: Draft, id: string): Experience => ({
   contractType: d.contractType as ContractType,
   startDate: d.startDate,
   endDate: d.isCurrent ? null : d.endDate,
+  salary: d.salary ? parseInt(d.salary) : null,
+  sector: d.sector || null,
 });
 
 const ExperienceSection: React.FC<{
@@ -241,6 +285,7 @@ const ExperienceSection: React.FC<{
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-gray-900">{group.company}</p>
                 <p className="text-xs text-gray-500">
+                  {group.roles[0].sector && <>{group.roles[0].sector} · </>}
                   {group.location && <>{group.location} · </>}
                   {formatDuration(group.months)}
                   {group.roles.length > 1 && <> · {group.roles.length} postes</>}
@@ -248,7 +293,7 @@ const ExperienceSection: React.FC<{
               </div>
               <button
                 type="button"
-                onClick={() => openNew({ company: group.company, location: group.location })}
+                onClick={() => openNew({ company: group.company, location: group.location, sector: group.roles[0].sector || '' })}
                 className="text-xs font-medium text-orange-600 hover:text-orange-700 whitespace-nowrap"
               >
                 + Poste
@@ -283,6 +328,12 @@ const ExperienceSection: React.FC<{
                       <p className="text-xs text-gray-500 mt-1">
                         {formatMonth(role.startDate)} – {formatMonth(role.endDate)} · {formatDuration(monthsBetween(role.startDate, role.endDate))}
                       </p>
+                      {role.salary !== null && (
+                        <p className="text-xs text-gray-700 mt-1">
+                          💰 <span className="font-semibold">{formatSalary(role.salary)}</span>
+                          <span className="text-gray-400"> brut fixe / an</span>
+                        </p>
+                      )}
                     </div>
                     <div className="flex gap-3 text-xs">
                       <button type="button" onClick={() => setEditing(role.id)} className="text-gray-500 hover:text-gray-800">

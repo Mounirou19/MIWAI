@@ -9,11 +9,6 @@ import { FieldError, inputClass, Label } from '../components/profil/fields';
 import { COUNTRIES } from '../data/referentiels';
 import { totalMonths } from '../utils/duration';
 
-const SECTORS = [
-  'Tech', 'Finance', 'Conseil', 'Santé', 'E-commerce', 'Retail',
-  'Industrie', 'Immobilier', 'Éducation', 'Médias', 'Telecom', 'Autre'
-];
-
 interface PersonalForm {
   firstName: string;
   lastName: string;
@@ -22,8 +17,6 @@ interface PersonalForm {
   age: string;
   city: string;
   country: string;
-  currentSalary: string;
-  sector: string;
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -46,10 +39,6 @@ const validatePersonal = (f: PersonalForm) => {
   }
   if (f.city && (!PLACE_RE.test(f.city) || f.city.length > 60)) errors.city = 'Nom de ville invalide';
   if (f.country && (!PLACE_RE.test(f.country) || f.country.length > 60)) errors.country = 'Nom de pays invalide';
-  if (f.currentSalary) {
-    const s = Number(f.currentSalary);
-    if (!Number.isInteger(s) || s < 0 || s > 1000000) errors.currentSalary = 'Montant entre 0 et 1 000 000 €';
-  }
   return errors;
 };
 
@@ -70,8 +59,6 @@ const Profil: React.FC = () => {
     age: '',
     city: '',
     country: '',
-    currentSalary: '',
-    sector: '',
   });
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [educations, setEducations] = useState<Education[]>([]);
@@ -90,8 +77,6 @@ const Profil: React.FC = () => {
           age: p?.age?.toString() || '',
           city: p?.city || '',
           country: p?.country || '',
-          currentSalary: p?.currentSalary?.toString() || '',
-          sector: p?.sector || '',
         });
         setExperiences(p?.experiences || []);
         setEducations(p?.educations || []);
@@ -131,10 +116,13 @@ const Profil: React.FC = () => {
       return;
     }
 
-    // Poste actuel et années d'expérience déduits des expériences (utilisés par le dashboard)
-    const current = [...experiences]
-      .filter((x) => x.endDate === null)
-      .sort((a, b) => b.startDate.localeCompare(a.startDate))[0];
+    // Situation actuelle déduite des expériences (utilisée par le dashboard) :
+    // poste en cours le plus récent, sinon la dernière expérience terminée
+    const byRecent = [...experiences].sort((a, b) =>
+      (b.endDate ?? '9999-12').localeCompare(a.endDate ?? '9999-12') || b.startDate.localeCompare(a.startDate)
+    );
+    const ongoing = byRecent.find((x) => x.endDate === null);
+    const latest = byRecent[0];
 
     setSaving(true);
     try {
@@ -142,7 +130,9 @@ const Profil: React.FC = () => {
         ...form,
         email: form.email.trim(),
         phone: form.phone.trim(),
-        currentJob: current?.title || '',
+        currentJob: ongoing?.title || '',
+        currentSalary: latest?.salary?.toString() || '',
+        sector: latest?.sector || '',
         yearsExperience: experiences.length ? String(Math.floor(totalMonths(experiences) / 12)) : '',
         formations: educations.map((x) => `${x.degree} — ${x.school}`).join(', '),
         experiences,
@@ -165,7 +155,7 @@ const Profil: React.FC = () => {
   const displayName = `${form.firstName} ${form.lastName}`.trim() || form.email;
 
   return (
-    <div>
+    <div className="max-w-3xl mx-auto">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
@@ -177,7 +167,7 @@ const Profil: React.FC = () => {
         <p className="text-gray-500">Complétez vos informations pour obtenir des analyses personnalisées</p>
       </div>
 
-      <div className="max-w-3xl">
+      <div>
         <form onSubmit={handleSubmit} noValidate className="space-y-6">
           {/* En-tête : Prénom NOM */}
           <div className="card">
@@ -247,28 +237,6 @@ const Profil: React.FC = () => {
           <ExperienceSection experiences={experiences} onChange={handleExperiences} />
 
           <EducationSection educations={educations} onChange={handleEducations} />
-
-          {/* Rémunération : utilisée par le dashboard */}
-          <div className="card">
-            <h2 className="text-lg font-bold text-gray-900 mb-1">Rémunération et secteur</h2>
-            <p className="text-xs text-gray-500 mb-4">Utilisés pour votre positionnement salarial dans le dashboard.</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="currentSalary">Salaire actuel (€ brut/an)</Label>
-                <input id="currentSalary" name="currentSalary" type="number" inputMode="numeric" min={0} value={form.currentSalary} onChange={handleChange} placeholder="45000" className={inputClass(errors.currentSalary)} />
-                <FieldError message={errors.currentSalary} />
-              </div>
-              <div>
-                <Label htmlFor="sector">Secteur</Label>
-                <select id="sector" name="sector" value={form.sector} onChange={handleChange} className="input-field">
-                  <option value="">Sélectionner un secteur</option>
-                  {SECTORS.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
 
           {/* Feedback */}
           {error && (

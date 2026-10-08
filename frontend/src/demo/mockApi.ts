@@ -1,5 +1,5 @@
 import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
-import { User, ForumTopic, ForumReply } from '../types';
+import { User, ForumTopic, ForumReply, FORUM_CATEGORIES, ForumCategory } from '../types';
 import { DEMO_USER, POSTES, FORMATIONS, createTopics, toAuthor } from './mockData';
 
 // Mode démo : remplace le backend par des données en mémoire.
@@ -124,19 +124,23 @@ const route = (method: string, path: string, params: Record<string, unknown>, bo
 
   // Forum
   if (method === 'get' && path === '/api/forum/topics') {
+    // ?category=<catégorie> filtre ; ?sort=top trie par vues, sinon par date (récent d'abord)
     const list = topics
       .filter((t) => matches(params.search, t.title, t.body))
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .filter((t) => !params.category || t.category === params.category)
+      .sort((a, b) => (params.sort === 'top' ? b.views - a.views : 0) || b.createdAt.localeCompare(a.createdAt))
       .map(({ replies, ...t }) => t);
     return [200, paginate(list, params)];
   }
   if (method === 'post' && path === '/api/forum/topics') {
     requireAuth();
     if (!body.title || !body.body) throw new HttpError(400, 'Title and body are required');
+    if (!FORUM_CATEGORIES.includes(body.category)) throw new HttpError(400, 'Veuillez choisir une catégorie');
     const now = new Date().toISOString();
     const topic: ForumTopic = {
       id: `topic-${Date.now()}`,
       title: body.title,
+      category: body.category as ForumCategory,
       body: body.body,
       authorId: user.id,
       views: 0,
